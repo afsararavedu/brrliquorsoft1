@@ -1,0 +1,43 @@
+ubuntu@ip-172-31-13-29:~$ sudo systemctl status brr-api
+sudo journalctl -u brr-api -n 30
+● brr-api.service - BRR Liquor Soft API server
+     Loaded: loaded (/etc/systemd/system/brr-api.service; enabled; preset: enabled)
+     Active: activating (auto-restart) (Result: exit-code) since Sat 2026-05-16 08:44:29 UTC; 913ms ago
+ Invocation: b4c426f7ea084df48bf9ad649ffdf15d
+    Process: 6383 ExecStart=/usr/local/bin/node --enable-source-maps /opt/brr/release/api/dist/index.mjs (code=exited, status=203/EXEC)
+   Main PID: 6383 (code=exited, status=203/EXEC)
+   Mem peak: 2M
+        CPU: 6ms
+May 16 08:44:16 ip-172-31-13-29 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 08:44:16 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:44:16 ip-172-31-13-29 (node)[6363]: brr-api.service: Unable to locate executable '/usr/local/bin/node': No such file or directory
+May 16 08:44:16 ip-172-31-13-29 (node)[6363]: brr-api.service: Failed at step EXEC spawning /usr/local/bin/node: No such file or directory
+May 16 08:44:16 ip-172-31-13-29 systemd[1]: brr-api.service: Main process exited, code=exited, status=203/EXEC
+May 16 08:44:16 ip-172-31-13-29 systemd[1]: brr-api.service: Failed with result 'exit-code'.
+May 16 08:44:19 ip-172-31-13-29 systemd[1]: brr-api.service: Scheduled restart job, restart counter is at 1.
+May 16 08:44:19 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:44:19 ip-172-31-13-29 (node)[6377]: brr-api.service: Unable to locate executable '/usr/local/bin/node': No such file or directory
+May 16 08:44:19 ip-172-31-13-29 (node)[6377]: brr-api.service: Failed at step EXEC spawning /usr/local/bin/node: No such file or directory
+May 16 08:44:19 ip-172-31-13-29 systemd[1]: brr-api.service: Main process exited, code=exited, status=203/EXEC
+May 16 08:44:19 ip-172-31-13-29 systemd[1]: brr-api.service: Failed with result 'exit-code'.
+May 16 08:44:22 ip-172-31-13-29 systemd[1]: brr-api.service: Scheduled restart job, restart counter is at 2.
+May 16 08:44:22 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:44:22 ip-172-31-13-29 (node)[6379]: brr-api.service: Unable to locate executable '/usr/local/bin/node': No such file or directory
+May 16 08:44:22 ip-172-31-13-29 (node)[6379]: brr-api.service: Failed at step EXEC spawning /usr/local/bin/node: No such file or directory
+May 16 08:44:22 ip-172-31-13-29 systemd[1]: brr-api.service: Main process exited, code=exited, status=203/EXEC
+May 16 08:44:22 ip-172-31-13-29 systemd[1]: brr-api.service: Failed with result 'exit-code'.
+May 16 08:44:26 ip-172-31-13-29 systemd[1]: brr-api.service: Scheduled restart job, restart counter is at 3.
+May 16 08:44:26 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:44:26 ip-172-31-13-29 (node)[6381]: brr-api.service: Unable to locate executable '/usr/local/bin/node': No such file or directory
+May 16 08:44:26 ip-172-31-13-29 (node)[6381]: brr-api.service: Failed at step EXEC spawning /usr/local/bin/node: No such file or directory
+May 16 08:44:26 ip-172-31-13-29 systemd[1]: brr-api.service: Main process exited, code=exited, status=203/EXEC
+May 16 08:44:26 ip-172-31-13-29 systemd[1]: brr-api.service: Failed with result 'exit-code'.
+May 16 08:44:29 ip-172-31-13-29 systemd[1]: brr-api.service: Scheduled restart job, restart counter is at 4.
+May 16 08:44:29 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:44:29 ip-172-31-13-29 (node)[6383]: brr-api.service: Unable to locate executable '/usr/local/bin/node': No such file or directory
+May 16 08:44:29 ip-172-31-13-29 (node)[6383]: brr-api.service: Failed at step EXEC spawning /usr/local/bin/node: No such file or directory
+May 16 08:44:29 ip-172-31-13-29 systemd[1]: brr-api.service: Main process exited, code=exited, status=203/EXEC
+May 16 08:44:29 ip-172-31-13-29 systemd[1]: brr-api.service: Failed with result 'exit-code'.
+ubuntu@ip-172-31-13-29:~$
+ubuntu@ip-172-31-13-29:~$ ls -la /opt/brr/release/api/dist/index.mjs
+-rw-r--r-- 1 brr brr 4434637 May 16 07:43 /opt/brr/release/api/dist/index.mjs
