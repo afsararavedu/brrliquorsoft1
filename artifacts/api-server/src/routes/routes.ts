@@ -9,6 +9,13 @@ import multer from "multer";
 import * as XLSX from "xlsx";
 import fs from "fs";
 import path from "path";
+import { createRequire } from "module";
+
+// createRequire lets us reliably load CJS modules from this ESM bundle.
+// Initialised once at module level so import.meta.url is resolved correctly
+// at startup (not lazily inside an async callback where esbuild may inline it
+// differently), and so there is no per-request overhead.
+const _pdfRequire = createRequire(import.meta.url);
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -210,15 +217,11 @@ async function parsePdfInvoice(
   // not defined" / "use legacy build" errors that arise when loading pdfjs
   // outside its bundled shim environment.
   // pdf-parse v1.1.1's index.js runs a test file on import (ENOENT in prod).
-  // Import the lib directly to bypass the test runner.
-  //
-  // Use createRequire instead of dynamic import() — in esbuild ESM output,
-  // import().default can return undefined for CJS modules in some Node.js
-  // versions, causing "pdfParse is not a function" at runtime on EC2.
-  // createRequire gives the raw module.exports (the PDF function) reliably.
-  const { createRequire } = await import("module");
-  const _req = createRequire(import.meta.url);
-  const pdfParse = _req("pdf-parse/lib/pdf-parse.js") as (
+  // Use lib/pdf-parse.js directly to bypass the test runner.
+  // _pdfRequire is the module-level createRequire initialised at startup —
+  // avoids a dynamic import() inside an async callback which esbuild can
+  // mis-handle, causing "pdfParse is not a function" on EC2.
+  const pdfParse = _pdfRequire("pdf-parse/lib/pdf-parse.js") as (
     buf: Buffer,
     opts?: Record<string, unknown>,
   ) => Promise<{ text: string; numpages: number }>;

@@ -1,0 +1,105 @@
+["balajiadmin"]},"msg":"Internal Server Error"}
+May 16 01:54:39 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 01:54:39 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 01:54:39 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 01:54:39 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 1.867s CPU time over 46min 38.840s wall clock time, 122.1M memory peak.
+May 16 01:54:39 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 01:54:40 ip-172-31-7-227 node[8985]: [db] Schema "jyothi_schema" is ready.
+May 16 01:54:40 ip-172-31-7-227 node[8985]: [db] Migration failed: Failed query: CREATE TABLE "daily_expenses" (
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "id" serial PRIMARY KEY NOT NULL,
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "date" date NOT NULL,
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "type" text NOT NULL,
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "category" text NOT NULL,
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "amount" numeric DEFAULT '0' NOT NULL,
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "description" text,
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "payment_mode" text DEFAULT 'Cash' NOT NULL,
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "submitted_by" text NOT NULL,
+May 16 01:54:40 ip-172-31-7-227 node[8985]:         "created_at" timestamp DEFAULT now()
+May 16 01:54:40 ip-172-31-7-227 node[8985]: );
+May 16 01:54:40 ip-172-31-7-227 node[8985]: params:
+May 16 01:54:40 ip-172-31-7-227 node[8985]: Seed attempt 1/3 failed: Failed query: insert into "users" ("id", "username", "password", "role", "temp_password", "must_reset_password", "password_changed_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default) returning "id", "username", "password", "role", "temp_password", "must_reset_password", "password_changed_at", "created_at"
+May 16 01:54:40 ip-172-31-7-227 node[8985]: params: balajiadmin,$2b$10$Fed/r0KuF10wX3VrAMV81eXFe33P722WKv9z73UCazilTBxSJQBlW,admin,,false,2026-05-16T01:54:40.733Z
+May 16 01:54:43 ip-172-31-7-227 node[8985]: Seed attempt 2/3 failed: Failed query: insert into "users" ("id", "username", "password", "role", "temp_password", "must_reset_password", "password_changed_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default) returning "id", "username", "password", "role", "temp_password", "must_reset_password", "password_changed_at", "created_at"
+May 16 01:54:43 ip-172-31-7-227 node[8985]: params: balajiadmin,$2b$10$6SdQ538M.JqJB8BFreZt0Oilr6gF0L85u3RFHITOc2uywAWBMYSVK,admin,,false,2026-05-16T01:54:43.857Z
+May 16 01:56:49 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 01:56:49 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 01:56:49 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 01:56:49 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 1.401s CPU time over 2min 9.868s wall clock time, 78.7M memory peak.
+May 16 01:56:49 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 01:56:50 ip-172-31-7-227 node[9210]: [db] Schema "jyothi_schema" is ready.
+May 16 01:56:50 ip-172-31-7-227 node[9210]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 01:59:51 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 01:59:51 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 01:59:51 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 01:59:51 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 1.140s CPU time over 3min 1.772s wall clock time, 78.6M memory peak.
+May 16 01:59:51 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 01:59:51 ip-172-31-7-227 node[10045]: [db] Schema "jyothi_schema" is ready.
+May 16 01:59:52 ip-172-31-7-227 node[10045]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 02:01:12 ip-172-31-7-227 node[10045]: Warning: Please use the `legacy` build in Node.js environments.
+May 16 02:05:15 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 02:05:15 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 02:05:15 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 02:05:15 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 2.246s CPU time over 5min 23.539s wall clock time, 136.5M memory peak.
+May 16 02:05:15 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 02:05:15 ip-172-31-7-227 node[10164]: [db] Schema "jyothi_schema" is ready.
+May 16 02:05:15 ip-172-31-7-227 node[10164]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 02:05:51 ip-172-31-7-227 node[10164]: Warning: Please use the `legacy` build in Node.js environments.
+May 16 02:08:46 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 02:08:46 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 02:08:46 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 02:08:46 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 2.003s CPU time over 3min 31.053s wall clock time, 130.6M memory peak.
+May 16 02:08:46 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 02:08:46 ip-172-31-7-227 node[10273]: [db] Schema "jyothi_schema" is ready.
+May 16 02:08:46 ip-172-31-7-227 node[10273]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 02:11:02 ip-172-31-7-227 node[10273]: Warning: Please use the `legacy` build in Node.js environments.
+May 16 03:25:39 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 03:25:39 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 03:25:39 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 03:25:39 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 2.238s CPU time over 1h 16min 53.258s wall clock time, 129.2M memory peak.
+May 16 03:25:39 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 03:25:39 ip-172-31-7-227 node[10572]: [db] Schema "jyothi_schema" is ready.
+May 16 03:25:39 ip-172-31-7-227 node[10572]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 03:29:02 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 03:29:02 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 03:29:02 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 03:29:02 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 832ms CPU time over 3min 23.375s wall clock time, 78.4M memory peak.
+May 16 03:29:02 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 03:29:03 ip-172-31-7-227 node[10654]: [db] Schema "jyothi_schema" is ready.
+May 16 03:29:03 ip-172-31-7-227 node[10654]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 03:29:50 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 03:29:50 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 03:29:50 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 03:29:50 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 818ms CPU time over 47.878s wall clock time, 78.4M memory peak.
+May 16 03:29:50 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 03:29:51 ip-172-31-7-227 node[10753]: [db] Schema "jyothi_schema" is ready.
+May 16 03:29:51 ip-172-31-7-227 node[10753]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 03:32:40 ip-172-31-7-227 node[10753]: Warning: Please use the `legacy` build in Node.js environments.
+May 16 03:33:46 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 03:33:46 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 03:33:46 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 03:33:46 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 1.809s CPU time over 3min 56.061s wall clock time, 133.7M memory peak.
+May 16 03:33:46 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 03:33:47 ip-172-31-7-227 node[11510]: [db] Schema "jyothi_schema" is ready.
+May 16 03:33:47 ip-172-31-7-227 node[11510]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 03:35:21 ip-172-31-7-227 node[11510]: Warning: Please use the `legacy` build in Node.js environments.
+May 16 04:57:05 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 04:57:05 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 04:57:05 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 04:57:05 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 2.665s CPU time over 1h 23min 18.277s wall clock time, 133.4M memory peak, 116.8M memory swap peak.
+May 16 04:57:05 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 04:57:06 ip-172-31-7-227 node[13431]: [db] Schema "jyothi_schema" is ready.
+May 16 04:57:06 ip-172-31-7-227 node[13431]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 05:15:13 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 05:15:13 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 05:15:13 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 05:15:13 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 2.517s CPU time over 18min 8.432s wall clock time, 206.2M memory peak, 135.5M memory swap peak.
+May 16 05:15:13 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 05:15:14 ip-172-31-7-227 node[13730]: [db] Schema "jyothi_schema" is ready.
+May 16 05:15:14 ip-172-31-7-227 node[13730]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
+May 16 05:28:42 ip-172-31-7-227 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 05:28:42 ip-172-31-7-227 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 05:28:42 ip-172-31-7-227 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 05:28:42 ip-172-31-7-227 systemd[1]: brr-api.service: Consumed 2.549s CPU time over 13min 28.832s wall clock time, 212.2M memory peak, 19.7M memory swap peak.
+May 16 05:28:42 ip-172-31-7-227 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 05:28:42 ip-172-31-7-227 node[14011]: [db] Schema "jyothi_schema" is ready.
+May 16 05:28:42 ip-172-31-7-227 node[14011]: [db] Migrations applied from /opt/brr/repo/release/api/migrations
