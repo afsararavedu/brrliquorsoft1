@@ -17,10 +17,10 @@ export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="h-16 lg:h-20 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-40 flex items-center justify-between px-4 lg:px-8 transition-all select-none">
       <div className="flex items-center gap-3">
-        {/* Hamburger menu — only visible on tablet (hidden on lg+) */}
+        {/* Hamburger menu — visible below lg (mobile + iPad portrait) */}
         <button
           onClick={onMenuClick}
-          className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+          className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
           aria-label="Open navigation menu"
           data-testid="button-hamburger-menu"
         >
@@ -38,7 +38,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2 lg:gap-4">
-        <div className="relative hidden md:block group">
+        <div className="relative hidden lg:block group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             placeholder="Global search..."

@@ -1201,7 +1201,24 @@ export default function Sales() {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap justify-end">
-            {speech.supported && (
+            {!speech.supported ? (
+              <div className="relative group">
+                <button
+                  disabled
+                  data-testid="button-voice-input-unsupported"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium shadow-sm bg-violet-600/40 text-white/60 cursor-not-allowed"
+                >
+                  <Mic className="w-4 h-4" />
+                  Voice
+                </button>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 pointer-events-none">
+                  <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
+                    Voice input requires Chrome, Edge, or Safari
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                  </div>
+                </div>
+              </div>
+            ) : (
               <div className="relative flex items-center gap-2">
                 <button
                   onClick={speech.toggle}

@@ -45,7 +45,7 @@ function Router() {
       {user && (
         <Sidebar drawerOpen={drawerOpen} onDrawerClose={() => setDrawerOpen(false)} />
       )}
-      <div className={`flex-1 min-w-0 ${user ? 'md:pl-64' : ''} flex flex-col min-h-screen transition-all`}>
+      <div className={`flex-1 min-w-0 ${user ? 'lg:pl-64' : ''} flex flex-col min-h-screen transition-all`}>
         {user && (
           <Header onMenuClick={() => setDrawerOpen(true)} />
         )}
