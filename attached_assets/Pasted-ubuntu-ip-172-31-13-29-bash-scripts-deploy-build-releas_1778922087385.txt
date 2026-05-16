@@ -1,0 +1,38 @@
+ubuntu@ip-172-31-13-29:~$ bash scripts/deploy/build-release.sh
+sudo rsync -a --delete /opt/brr/repo/release/web/ /var/www/brr-web/
+sudo systemctl restart brr-api
+journalctl -u brr-api -n 30 --no-pager
+bash: scripts/deploy/build-release.sh: No such file or directory
+rsync: [sender] change_dir "/opt/brr/repo/release/web" failed: No such file or directory (2)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.4.1]
+May 16 08:46:49 ip-172-31-13-29 (node)[6511]: brr-api.service: Failed at step EXEC spawning /usr/local/bin/node: No such file or directory
+May 16 08:46:49 ip-172-31-13-29 systemd[1]: brr-api.service: Main process exited, code=exited, status=203/EXEC
+May 16 08:46:49 ip-172-31-13-29 systemd[1]: brr-api.service: Failed with result 'exit-code'.
+May 16 08:46:52 ip-172-31-13-29 systemd[1]: brr-api.service: Scheduled restart job, restart counter is at 48.
+May 16 08:46:52 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:46:52 ip-172-31-13-29 (node)[6521]: brr-api.service: Unable to locate executable '/usr/local/bin/node': No such file or directory
+May 16 08:46:52 ip-172-31-13-29 (node)[6521]: brr-api.service: Failed at step EXEC spawning /usr/local/bin/node: No such file or directory
+May 16 08:46:52 ip-172-31-13-29 systemd[1]: brr-api.service: Main process exited, code=exited, status=203/EXEC
+May 16 08:46:52 ip-172-31-13-29 systemd[1]: brr-api.service: Failed with result 'exit-code'.
+May 16 08:46:55 ip-172-31-13-29 systemd[1]: brr-api.service: Scheduled restart job, restart counter is at 49.
+May 16 08:46:55 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:46:55 ip-172-31-13-29 (node)[6523]: brr-api.service: Unable to locate executable '/usr/local/bin/node': No such file or directory
+May 16 08:46:55 ip-172-31-13-29 (node)[6523]: brr-api.service: Failed at step EXEC spawning /usr/local/bin/node: No such file or directory
+May 16 08:46:55 ip-172-31-13-29 systemd[1]: brr-api.service: Main process exited, code=exited, status=203/EXEC
+May 16 08:46:55 ip-172-31-13-29 systemd[1]: brr-api.service: Failed with result 'exit-code'.
+May 16 08:46:58 ip-172-31-13-29 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 08:46:58 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:46:58 ip-172-31-13-29 (-enable-source-maps)[6626]: brr-api.service: Unable to locate executable '-enable-source-maps': No such file or directory
+May 16 08:46:58 ip-172-31-13-29 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 08:56:15 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+May 16 08:56:16 ip-172-31-13-29 node[7389]: [db] Schema "jyothi_schema" is ready.
+May 16 08:56:16 ip-172-31-13-29 node[7389]: [db] Migrations applied from /opt/brr/release/api/migrations
+May 16 08:56:16 ip-172-31-13-29 node[7389]: {"level":30,"time":1778921776301,"pid":7389,"hostname":"ip-172-31-13-29","DB_SCHEMA":"jyothi_schema","msg":"Active database schema (search_path)"}
+May 16 08:56:16 ip-172-31-13-29 node[7389]: {"level":30,"time":1778921776333,"pid":7389,"hostname":"ip-172-31-13-29","isProduction":true,"cookieSecure":false,"COOKIE_SECURE":"false","msg":"Session cookie settings — if EC2 gets 401 after login set COOKIE_SECURE=false in /etc/brr/brr-api.env"}
+May 16 08:56:16 ip-172-31-13-29 node[7389]: {"level":30,"time":1778921776350,"pid":7389,"hostname":"ip-172-31-13-29","port":8080,"msg":"Server listening"}
+May 16 09:00:39 ip-172-31-13-29 systemd[1]: Stopping brr-api.service - BRR Liquor Soft API server...
+May 16 09:00:39 ip-172-31-13-29 systemd[1]: brr-api.service: Deactivated successfully.
+May 16 09:00:39 ip-172-31-13-29 systemd[1]: Stopped brr-api.service - BRR Liquor Soft API server.
+May 16 09:00:39 ip-172-31-13-29 systemd[1]: brr-api.service: Consumed 945ms CPU time over 4min 24.276s wall clock time, 111.3M memory peak.
+May 16 09:00:39 ip-172-31-13-29 systemd[1]: Started brr-api.service - BRR Liquor Soft API server.
+ubuntu@ip-172-31-13-29:~$
