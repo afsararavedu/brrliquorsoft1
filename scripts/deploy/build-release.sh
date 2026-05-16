@@ -148,3 +148,13 @@ cp -R artifacts/brr-web/dist/public/. "$RELEASE_DIR/web/"
 log "done."
 log "release/ contents:"
 ( cd "$RELEASE_DIR" && find . -maxdepth 3 -mindepth 1 | sort )
+
+# Pack the release folder into a single tar.gz so it can be downloaded from
+# the Replit file browser and uploaded directly to any EC2 / VPS instance
+# without needing git or build tools on the server.
+TAR_FILE="brr-liquor-soft-release.tar.gz"
+log "packaging → ${TAR_FILE}"
+tar -czf "$TAR_FILE" -C . release/
+log "✓ ${TAR_FILE} ready ($(du -sh "$TAR_FILE" | cut -f1))"
+log "  Download it from the Replit file browser, then on EC2 run:"
+log "    sudo tar -xzf ${TAR_FILE} -C /opt/brr && sudo systemctl restart brr-api"

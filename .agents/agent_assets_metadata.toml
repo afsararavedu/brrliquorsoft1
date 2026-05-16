@@ -1,8 +1,13 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "evHFvv8D-FLqtJHQVmh4D"
 uri = "file://artifacts/brr-mobile/assets/images/icon.png"
 type = "image"
 title = "BRR liquor mobile app icon"
+
+[[outputs]]
+id = "vCUmjbH0kHs8MsoXiY0HF"
+uri = "file://brr-liquor-soft-release.tar.gz"
+type = "unspecified"
+title = "BRR Liquor Soft — Release Package"
