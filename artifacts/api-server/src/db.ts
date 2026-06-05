@@ -120,7 +120,9 @@ if (DB_SCHEMA !== "public") {
 
   if (migrationsDir) {
     try {
-      await migrate(_mainDb, { migrationsFolder: migrationsDir });
+      // migrationsSchema keeps the tracking table in the target schema
+      // instead of creating a separate 'drizzle' schema.
+      await migrate(_mainDb, { migrationsFolder: migrationsDir, migrationsSchema: DB_SCHEMA });
       // eslint-disable-next-line no-console
       console.info(`[db] Migrations applied from ${migrationsDir}`);
     } catch (err: unknown) {
@@ -201,7 +203,9 @@ export async function initSchemaIfNeeded(schemaName: string): Promise<void> {
                           : null;
       if (migrationsDir) {
         try {
-          await migrate(schemaDb, { migrationsFolder: migrationsDir });
+          // migrationsSchema keeps the tracking table inside the target schema
+          // so each shop schema is self-contained and doesn't pollute 'drizzle'.
+          await migrate(schemaDb, { migrationsFolder: migrationsDir, migrationsSchema: schemaName });
           // eslint-disable-next-line no-console
           console.info(`[db] Migrations applied for schema "${schemaName}".`);
         } catch (err: unknown) {
@@ -237,6 +241,29 @@ export async function initSchemaIfNeeded(schemaName: string): Promise<void> {
       // eslint-disable-next-line no-console
       console.error(`[db] Shop schema bootstrap error: ${msg}`);
     });
+}
+
+// ── Remove legacy 'drizzle' schema ────────────────────────────────────────
+// Older builds stored Drizzle migration metadata in a top-level 'drizzle'
+// schema. Now each schema tracks its own migrations (migrationsSchema option),
+// so the global 'drizzle' schema is no longer needed. Drop it if it exists.
+{
+  const bc = new Client({
+    connectionString: BOOTSTRAP_URL,
+    ssl: { rejectUnauthorized: false },
+  });
+  try {
+    await bc.connect();
+    await bc.query("DROP SCHEMA IF EXISTS drizzle CASCADE");
+    // eslint-disable-next-line no-console
+    console.info('[db] Legacy "drizzle" schema removed (or was already absent).');
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // eslint-disable-next-line no-console
+    console.warn(`[db] Could not remove "drizzle" schema: ${msg}`);
+  } finally {
+    await bc.end().catch(() => {});
+  }
 }
 
 // ── Helper ─────────────────────────────────────────────────────────────────
