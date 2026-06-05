@@ -118,8 +118,8 @@ ssh root@YOUR_VPS_IP
 apt update && apt upgrade -y
 apt install -y git nginx curl build-essential
 
-# Node.js 20 LTS
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+# Node.js 24 LTS
+curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 apt install -y nodejs
 
 # pnpm
@@ -127,7 +127,7 @@ corepack enable
 corepack prepare pnpm@latest --activate
 
 # Verify
-node --version   # v20.x.x
+node --version   # v24.x.x
 pnpm --version   # 10.x.x
 ```
 

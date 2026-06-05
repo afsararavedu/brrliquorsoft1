@@ -106,7 +106,7 @@ cat > "$RELEASE_DIR/api/package.json" << 'EOF'
     "cookie-parser": "^1.4.7",
     "cors": "^2",
     "dotenv": "^16.0.0",
-    "drizzle-orm": "^0.36.4",
+    "drizzle-orm": "^0.45.2",
     "express": "^5",
     "express-session": "^1.18.2",
     "memorystore": "^1.6.7",
