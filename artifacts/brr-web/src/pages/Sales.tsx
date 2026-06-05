@@ -1419,7 +1419,7 @@ export default function Sales() {
             <thead className="sticky top-0 z-20 bg-secondary shadow-sm">
               <tr className="bg-secondary border-b-2 border-border">
                 <th ref={thSnoRef} className="table-header w-[35px] min-w-[35px] whitespace-nowrap border-r border-border sticky left-0 top-0 z-30 bg-secondary">SNo</th>
-                <th ref={thBrandNoRef} className="table-header w-[10px] min-w-[10px] whitespace-nowrap border-r border-border sticky top-0 z-30 bg-secondary" style={{ left: colLeft.brandNo }}>
+                <th ref={thBrandNoRef} className="table-header whitespace-nowrap border-r border-border sticky top-0 z-30 bg-secondary" style={{ left: colLeft.brandNo }}>
                   <button onClick={() => handleSalesSortToggle('brandNumber')} className="flex items-center gap-1 hover:text-foreground w-full">
                     Brand No {salesSortField === 'brandNumber' ? (salesSortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
                   </button>
@@ -1485,7 +1485,7 @@ export default function Sales() {
                       <td className={`table-cell w-[35px] min-w-[35px] whitespace-nowrap font-mono text-xs text-muted-foreground border-r border-border sticky left-0 z-10 ${rowBg} group-hover:bg-[#fff5f4]`}>
                         {globalIdx + 1}
                       </td>
-                      <td className={`table-cell w-[10px] min-w-[10px] whitespace-nowrap font-mono text-xs text-muted-foreground border-r border-border sticky z-10 ${rowBg} group-hover:bg-[#fff5f4]`} style={{ left: colLeft.brandNo }}>
+                      <td className={`table-cell whitespace-nowrap font-mono text-xs text-muted-foreground border-r border-border sticky z-10 ${rowBg} group-hover:bg-[#fff5f4]`} style={{ left: colLeft.brandNo }}>
                         {item.brandNumber}
                       </td>
                       <td className={`table-cell w-[170px] min-w-[170px] max-w-[170px] truncate font-medium border-r border-border sticky z-10 ${rowBg} group-hover:bg-[#fff5f4]`} style={{ left: colLeft.brandName }} title={item.brandName}>{item.brandName}</td>
