@@ -150,6 +150,13 @@ export default function Sales() {
   const floorDateStr = floorDateData?.invoiceDate ?? "2020-01-01";
   const floorDate = parse(floorDateStr, "yyyy-MM-dd", new Date());
 
+  // Latest invoice date from orders — used as fallback when no saved sales exist yet
+  const { data: latestInvoiceDateData } = useQuery<{ invoiceDate: string | null }>({
+    queryKey: ["/api/orders/latest-invoice-date"],
+    retry: 2,
+    staleTime: 300_000,
+  });
+
   // All dates that have actual sales data — used to grey-out empty dates in the calendar
   const { data: availableSalesDatesData } = useQuery<{ dates: string[] }>({
     queryKey: ["/api/sales/available-dates"],
@@ -159,17 +166,23 @@ export default function Sales() {
     [availableSalesDatesData],
   );
 
-  // On first load: if today has no data, jump straight to the most recent date that does
+  // On first load: jump to the most relevant date
+  //   1. If saved sales exist and today has none → jump to the most recent saved date
+  //   2. If no saved sales exist at all but orders do → jump to the latest order invoice date
+  //      (covers fresh shops where inventory was imported but no sales entered yet)
   const hasAutoSelected = useRef(false);
   useEffect(() => {
     if (!availableSalesDatesData || hasAutoSelected.current) return;
-    hasAutoSelected.current = true;
     const today = getTodayLocal();
     const dates = availableSalesDatesData.dates;
     if (dates.length > 0 && !dates.includes(today)) {
+      hasAutoSelected.current = true;
       setSelectedDate(dates[dates.length - 1]);
+    } else if (dates.length === 0 && latestInvoiceDateData?.invoiceDate) {
+      hasAutoSelected.current = true;
+      setSelectedDate(latestInvoiceDateData.invoiceDate);
     }
-  }, [availableSalesDatesData]);
+  }, [availableSalesDatesData, latestInvoiceDateData]);
 
   // Compute summary client-side from localSales so it updates in real-time
   const summary = useMemo<SalesSummary>(() => {
