@@ -114,12 +114,12 @@ export default function Expenses() {
 
   const { data: expenses = [], isLoading: expensesLoading } = useQuery<DailyExpense[]>({
     queryKey: ["/api/daily-expenses", selectedDate],
-    queryFn: () => fetch(`/api/daily-expenses?date=${selectedDate}`, { credentials: "include" }).then(r => r.json()),
+    queryFn: () => fetch(`/api/daily-expenses?date=${selectedDate}`, { credentials: "include" }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
   });
 
   const { data: salesData = [] } = useQuery<any[]>({
     queryKey: ["/api/sales", selectedDate],
-    queryFn: () => fetch(`/api/sales?date=${selectedDate}`, { credentials: "include" }).then(r => r.json()),
+    queryFn: () => fetch(`/api/sales?date=${selectedDate}`, { credentials: "include" }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
   });
 
   // ── Derived summary values ──────────────────────────────────────────────────

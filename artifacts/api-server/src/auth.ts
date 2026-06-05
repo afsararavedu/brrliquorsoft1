@@ -160,10 +160,16 @@ export function setupAuth(app: Express) {
     done(null, user.id);
   });
 
-  passport.deserializeUser(async (id: number, done) => {
+  // 3-arity form: Passport 0.6+ passes req as the first arg when the
+  // deserializer declares 3 parameters. We cast through `any` because the
+  // installed @types/passport typedefs don't expose this overload, but the
+  // runtime behaviour is correct. Reading shopSchema from the session lets us
+  // route the user lookup to the correct per-shop schema.
+  (passport.deserializeUser as any)(async (req: any, id: number, done: (err: unknown, user?: SelectUser | null) => void) => {
     try {
-      const user = await storage.getUser(id);
-      done(null, user);
+      const schema: string = req?.session?.shopSchema ?? DB_SCHEMA;
+      const user = await runInSchema(schema, () => storage.getUser(id));
+      done(null, user ?? null);
     } catch (err) {
       done(err);
     }
