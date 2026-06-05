@@ -107,9 +107,11 @@ const EMPTY_ROW: InsertOrder = {
   unitRatePerBottle: "0",
   totalAmount: "0",
   breakageBottleQty: 0,
+  totalBottles: null,
   remarks: "",
   invoiceDate: "",
   icdcNumber: "",
+  dataUpdated: "",
 };
 
 const fmt2 = (v: string | number | null | undefined): string => {
@@ -656,7 +658,7 @@ export default function Inventory() {
   // ---- Handlers ----
   const handleViewShopDetail = (icdcNum: string) => { if (!icdcNum) return; setSelectedIcdcNumber(icdcNum); setShowShopDetail(true); };
 
-  const { data: shopDetailData, isLoading: isLoadingShopDetail } = useQuery<ShopDetail>({
+  const { data: shopDetailData, isLoading: isLoadingShopDetail } = useQuery<ShopDetail & Record<string, unknown>>({
     queryKey: ["/api/shop-details/by-icdc", selectedIcdcNumber],
     queryFn: async () => { const res = await fetch(`/api/shop-details/by-icdc/${encodeURIComponent(selectedIcdcNumber)}`); if (!res.ok) return null; return res.json(); },
     enabled: showShopDetail && !!selectedIcdcNumber,
@@ -2438,7 +2440,7 @@ export default function Inventory() {
               {[{ label: "Name", value: shopDetailData.name }, { label: "Address", value: shopDetailData.address }, { label: "Retail Shop Excise Tax", value: shopDetailData.retailShopExciseTax }, { label: "License No", value: shopDetailData.licenseNo }, { label: "PAN Number", value: shopDetailData.panNumber }, { label: "Name & Phone", value: shopDetailData.namePhone }, { label: "Invoice Date", value: shopDetailData.invoiceDate }, { label: "Gazette Code & Licensee Issue Date", value: shopDetailData.gazetteCodeLicenseeIssueDate }, { label: "ICDC Number", value: shopDetailData.icdcNumber }].map(item => (
                 <div key={item.label} className="flex flex-col gap-0.5" data-testid={`text-shop-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>
                   <span className="text-xs font-medium text-muted-foreground">{item.label}</span>
-                  <span className="text-sm text-foreground">{item.value || "-"}</span>
+                  <span className="text-sm text-foreground">{item.value != null && item.value !== "" ? String(item.value) : "-"}</span>
                 </div>
               ))}
             </div>

@@ -230,7 +230,7 @@ export default function Sales() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [salesSortField, setSalesSortField] = useState<'brandNumber' | 'mrp' | 'soldBottles' | null>(null);
+  const [salesSortField, setSalesSortField] = useState<'brandNumber' | 'size' | 'mrp' | 'soldBottles' | null>(null);
   const [salesSortDir, setSalesSortDir] = useState<'asc' | 'desc'>('asc');
 
   // Bulk Excel upload state
@@ -892,7 +892,7 @@ export default function Sales() {
     });
   };
 
-  const handleSalesSortToggle = (field: 'brandNumber' | 'mrp' | 'soldBottles') => {
+  const handleSalesSortToggle = (field: 'brandNumber' | 'size' | 'mrp' | 'soldBottles') => {
     if (salesSortField === field) {
       setSalesSortDir(d => d === 'asc' ? 'desc' : 'asc');
     } else {
@@ -976,10 +976,11 @@ export default function Sales() {
   });
 
   const filteredSales = useMemo(() => {
+    const q = searchTerm.toLowerCase();
     let rows = localSales.filter(
       (item) =>
-        item.brandName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.brandNumber.toLowerCase().includes(searchTerm.toLowerCase()),
+        (item.brandName ?? "").toLowerCase().includes(q) ||
+        (item.brandNumber ?? "").toLowerCase().includes(q),
     );
     if (salesSortField) {
       rows = [...rows].sort((a, b) => {
@@ -1003,7 +1004,7 @@ export default function Sales() {
     return `₹${val.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  const shopName = shopDetails?.[0]?.name || "Shop Name";
+  const shopName = shopDetails?.[0]?.shopName || "Shop Name";
 
   const cats = summary?.categories || {};
   const imlCount = (field: keyof typeof cats[string]) =>
