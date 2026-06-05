@@ -985,6 +985,7 @@ export default function Sales() {
       rows = [...rows].sort((a, b) => {
         let av: number | string = 0, bv: number | string = 0;
         if (salesSortField === 'brandNumber') { av = a.brandNumber; bv = b.brandNumber; }
+        else if (salesSortField === 'size') { av = parseFloat(a.size) || 0; bv = parseFloat(b.size) || 0; }
         else if (salesSortField === 'mrp') { av = parseFloat(a.mrp as string) || 0; bv = parseFloat(b.mrp as string) || 0; }
         else if (salesSortField === 'soldBottles') { av = a.soldBottles ?? 0; bv = b.soldBottles ?? 0; }
         if (av < bv) return salesSortDir === 'asc' ? -1 : 1;
@@ -1424,7 +1425,11 @@ export default function Sales() {
                   </button>
                 </th>
                 <th ref={thBrandNameRef} className="table-header w-[170px] min-w-[170px] max-w-[170px] whitespace-nowrap border-r border-border sticky top-0 z-30 bg-secondary shadow-[2px_0_0_0_rgba(0,0,0,0.04)]" style={{ left: colLeft.brandName }}>Brand Name</th>
-                <th ref={thSizeRef} className="table-header w-[52px] min-w-[52px] whitespace-nowrap border-r border-border sticky top-0 z-30 bg-secondary shadow-[4px_0_6px_-4px_rgba(0,0,0,0.15)]" style={{ left: colLeft.size }}>Size</th>
+                <th ref={thSizeRef} className="table-header w-[52px] min-w-[52px] whitespace-nowrap border-r border-border sticky top-0 z-30 bg-secondary shadow-[4px_0_6px_-4px_rgba(0,0,0,0.15)]" style={{ left: colLeft.size }}>
+                  <button onClick={() => handleSalesSortToggle('size')} className="flex items-center gap-1 hover:text-foreground w-full">
+                    Size {salesSortField === 'size' ? (salesSortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                  </button>
+                </th>
                 <th className="table-header w-10 border-r border-border">Qty/Cs</th>
                 <th className="table-header w-14 border-r border-border">Op. Bal (Btls)</th>
                 <th className="table-header w-16 text-right bg-green-50/50 border-r border-border">New Stk (Cs)</th>
