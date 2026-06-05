@@ -1,9 +1,10 @@
 
 import "dotenv/config";
+import { AsyncLocalStorage } from "async_hooks";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
-import * as schema from "@workspace/db";
+import * as dbSchema from "@workspace/db";
 import { existsSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -23,54 +24,39 @@ export const DB_SCHEMA = process.env.DB_SCHEMA || "public";
 
 // DIRECT_DATABASE_URL (optional) points to the PostgreSQL server directly
 // (port 5432) and is used only for DDL operations (CREATE SCHEMA) that
-// PgBouncer in transaction mode does not support.  When not set, the
-// regular DATABASE_URL is used — which is fine for RDS / direct Postgres
-// connections.  On Supabase, set this to the "Direct connection" URL
-// (Session Pooler or direct port 5432) to avoid "prepared statement already
-// exists" errors during schema bootstrap.
+// PgBouncer in transaction mode does not support.
 const BOOTSTRAP_URL =
   process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL!;
 
-// ── Schema bootstrap (top-level await) ────────────────────────────────────────
-//
-// WHY: The session store (connect-pg-simple) runs CREATE TABLE IF NOT EXISTS
-// the moment DatabaseStorage is constructed (at module load time).  If the
-// PostgreSQL schema named in DB_SCHEMA does not exist yet, that CREATE TABLE
-// silently fails and every request after login returns 401 because sessions
-// can never be saved.
-//
-// FIX: Use a plain Client (not the pool) to guarantee the schema exists
-// BEFORE the module finishes loading and BEFORE any other module can import
-// `pool` or `db`.  Top-level await makes Node.js wait here — storage.ts and
-// everything else that imports db.ts will only continue once this resolves.
-//
-// The Client uses process.env.DATABASE_URL directly (no search_path option)
-// because CREATE SCHEMA does not use search_path.
-if (DB_SCHEMA !== "public") {
-  const bootstrapClient = new Client({
-    connectionString: BOOTSTRAP_URL,
-    ssl: { rejectUnauthorized: false },
-  });
-  try {
-    await bootstrapClient.connect();
-    await bootstrapClient.query(
-      `CREATE SCHEMA IF NOT EXISTS "${DB_SCHEMA}"`,
-    );
-    // eslint-disable-next-line no-console
-    console.info(`[db] Schema "${DB_SCHEMA}" is ready.`);
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    // eslint-disable-next-line no-console
-    console.error(`[db] Could not create schema "${DB_SCHEMA}": ${msg}`);
-  } finally {
-    await bootstrapClient.end().catch(() => {});
-  }
+// Shop name → PostgreSQL schema name mapping.
+// Used by the login endpoint to route each shop to its own isolated schema.
+export const SHOP_SCHEMA_MAP: Record<string, string> = {
+  Balaji:   "balaji_schema",
+  Jyothi:   "jyothi_schema",
+  Padma:    "padma_schema",
+  Mallanna: "mallanna_schema",
+};
+
+// ── AsyncLocalStorage for per-request schema selection ────────────────────────
+const _schemaALS = new AsyncLocalStorage<string>();
+
+/** Returns the schema active for the current request, or the default DB_SCHEMA. */
+export function getActiveSchema(): string {
+  return _schemaALS.getStore() ?? DB_SCHEMA;
+}
+
+/**
+ * Run `fn` with the given schema set as the active schema for this async
+ * context. All storage/db calls inside fn (and anything they await) will
+ * transparently use the correct per-shop pool.
+ */
+export function runInSchema<T>(schema: string, fn: () => T): T {
+  return _schemaALS.run(schema, fn);
 }
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Embed search_path directly in the PostgreSQL connection string via the
-// `options` GUC parameter so every connection from the pool automatically
-// targets the configured schema — no extra SQL round-trips or event hooks.
+// Embed search_path in the PostgreSQL connection string so every connection
+// from the pool automatically targets the configured schema.
 function buildConnectionString(base: string, dbSchema: string): string {
   const url = new URL(base);
   const existing = url.searchParams.get("options") ?? "";
@@ -82,48 +68,51 @@ function buildConnectionString(base: string, dbSchema: string): string {
   return url.toString();
 }
 
-const connectionString = buildConnectionString(
-  process.env.DATABASE_URL,
-  DB_SCHEMA,
-);
+// ── Default (main) pool & db ───────────────────────────────────────────────
+// These are bootstrapped at startup for DB_SCHEMA (or "public").
+// They are also the fallback when a per-shop schema entry hasn't been
+// initialised yet (should not happen in normal flow).
 
-export const pool = new Pool({
-  connectionString,
+const _mainPool = new Pool({
+  connectionString: buildConnectionString(process.env.DATABASE_URL!, DB_SCHEMA),
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 30000,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: { rejectUnauthorized: false },
 });
 
-pool.on("error", (err) => {
+_mainPool.on("error", (err) => {
   // eslint-disable-next-line no-console
   console.error("Unexpected database pool error:", err.message);
 });
 
-export const db = drizzle(pool, { schema });
+const _mainDb = drizzle(_mainPool, { schema: dbSchema });
 
-// ── Auto-migration (top-level await) ──────────────────────────────────────────
-//
-// Applies any pending SQL migration files from lib/db/migrations/ using
-// drizzle-orm's built-in migrator. This is idempotent: already-applied
-// migrations are tracked in __drizzle_migrations and skipped on re-runs.
-//
-// On EC2 (production): migrations live at ../migrations relative to the
-//   esbuild bundle (dist/index.mjs → release/api/dist → release/api/migrations).
-// In development (tsx): falls back to ../../lib/db/migrations relative to
-//   the TypeScript source file (artifacts/api-server/src/db.ts).
-//
-// drizzle-kit is NOT needed at runtime — only the committed .sql files are.
+// ── Schema bootstrap for the default schema (top-level await) ─────────────
+if (DB_SCHEMA !== "public") {
+  const bootstrapClient = new Client({
+    connectionString: BOOTSTRAP_URL,
+    ssl: { rejectUnauthorized: false },
+  });
+  try {
+    await bootstrapClient.connect();
+    await bootstrapClient.query(`CREATE SCHEMA IF NOT EXISTS "${DB_SCHEMA}"`);
+    // eslint-disable-next-line no-console
+    console.info(`[db] Schema "${DB_SCHEMA}" is ready.`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // eslint-disable-next-line no-console
+    console.error(`[db] Could not create schema "${DB_SCHEMA}": ${msg}`);
+  } finally {
+    await bootstrapClient.end().catch(() => {});
+  }
+}
+
+// ── Auto-migration for the default schema (top-level await) ───────────────
 {
   const here = dirname(fileURLToPath(import.meta.url));
-  // Compiled bundle: artifacts/api-server/dist/index.mjs  → here = …/dist/
-  //   prodMigrationsDir: …/dist/../migrations  = …/api-server/migrations  (EC2 layout)
-  //   devMigrationsDir:  …/dist/../../../lib/db/migrations
-  //                    = workspace-root/lib/db/migrations               (dev layout)
-  const prodMigrationsDir = join(here, "../migrations");            // EC2 bundle
-  const devMigrationsDir  = join(here, "../../../lib/db/migrations"); // dev (3 levels up from dist/)
+  const prodMigrationsDir = join(here, "../migrations");
+  const devMigrationsDir  = join(here, "../../../lib/db/migrations");
 
   const migrationsDir = existsSync(prodMigrationsDir) ? prodMigrationsDir
                       : existsSync(devMigrationsDir)  ? devMigrationsDir
@@ -131,19 +120,142 @@ export const db = drizzle(pool, { schema });
 
   if (migrationsDir) {
     try {
-      await migrate(db, { migrationsFolder: migrationsDir });
+      await migrate(_mainDb, { migrationsFolder: migrationsDir });
       // eslint-disable-next-line no-console
       console.info(`[db] Migrations applied from ${migrationsDir}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       // eslint-disable-next-line no-console
       console.error(`[db] Migration failed: ${msg}`);
-      // Do not crash — a partial schema is better than no server.
-      // The seed step below will surface concrete errors if tables are missing.
     }
   } else {
     // eslint-disable-next-line no-console
     console.warn("[db] No migrations folder found — skipping auto-migrate.");
   }
 }
-// ──────────────────────────────────────────────────────────────────────────────
+
+// Pre-populate the schema cache with the default pool+db so the proxy
+// can serve it immediately without going through the lazy init path.
+type DbEntry = { pool: pg.Pool; db: ReturnType<typeof drizzle<typeof dbSchema>> };
+const _schemaCache = new Map<string, DbEntry>();
+_schemaCache.set(DB_SCHEMA, { pool: _mainPool, db: _mainDb });
+
+// ── Per-schema lazy initialisation ────────────────────────────────────────
+const _initLocks = new Map<string, Promise<void>>();
+
+/**
+ * Ensure the given PostgreSQL schema exists and has all migrations applied.
+ * Creates a dedicated connection pool for it and caches the drizzle instance.
+ * Safe to call multiple times — subsequent calls for the same schema are no-ops.
+ */
+export async function initSchemaIfNeeded(schemaName: string): Promise<void> {
+  if (_schemaCache.has(schemaName)) return;
+
+  // Deduplicate concurrent init calls for the same schema
+  const existing = _initLocks.get(schemaName);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    // 1. Create the schema if it doesn't exist
+    if (schemaName !== "public") {
+      const bc = new Client({
+        connectionString: BOOTSTRAP_URL,
+        ssl: { rejectUnauthorized: false },
+      });
+      try {
+        await bc.connect();
+        await bc.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
+        // eslint-disable-next-line no-console
+        console.info(`[db] Schema "${schemaName}" created/verified.`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // eslint-disable-next-line no-console
+        console.error(`[db] Could not create schema "${schemaName}": ${msg}`);
+      } finally {
+        await bc.end().catch(() => {});
+      }
+    }
+
+    // 2. Create a dedicated pool for this schema
+    const schemaPool = new Pool({
+      connectionString: buildConnectionString(process.env.DATABASE_URL!, schemaName),
+      max: 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 30000,
+      ssl: { rejectUnauthorized: false },
+    });
+    schemaPool.on("error", (err) => {
+      // eslint-disable-next-line no-console
+      console.error(`[db][${schemaName}] Pool error:`, err.message);
+    });
+
+    const schemaDb = drizzle(schemaPool, { schema: dbSchema });
+
+    // 3. Run migrations for this schema
+    {
+      const here = dirname(fileURLToPath(import.meta.url));
+      const prodMigrationsDir = join(here, "../migrations");
+      const devMigrationsDir  = join(here, "../../../lib/db/migrations");
+      const migrationsDir = existsSync(prodMigrationsDir) ? prodMigrationsDir
+                          : existsSync(devMigrationsDir)  ? devMigrationsDir
+                          : null;
+      if (migrationsDir) {
+        try {
+          await migrate(schemaDb, { migrationsFolder: migrationsDir });
+          // eslint-disable-next-line no-console
+          console.info(`[db] Migrations applied for schema "${schemaName}".`);
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          // eslint-disable-next-line no-console
+          console.error(`[db] Migration failed for schema "${schemaName}": ${msg}`);
+        }
+      }
+    }
+
+    _schemaCache.set(schemaName, { pool: schemaPool, db: schemaDb });
+    _initLocks.delete(schemaName);
+  })();
+
+  _initLocks.set(schemaName, promise);
+  return promise;
+}
+
+// ── Helper ─────────────────────────────────────────────────────────────────
+function _getEntry(schema: string): DbEntry {
+  return _schemaCache.get(schema) ?? { pool: _mainPool, db: _mainDb };
+}
+
+// ── Exports ────────────────────────────────────────────────────────────────
+
+/**
+ * The raw main pool (for the DB_SCHEMA / default schema).
+ * Used by the session store so sessions are always written to a single,
+ * stable schema regardless of which shop the user is logged into.
+ */
+export const mainPool: pg.Pool = _mainPool;
+
+/**
+ * Schema-aware pool proxy. Routes to the pool of whichever schema is active
+ * in the current AsyncLocalStorage context (set by the schema middleware).
+ * Falls back to the main pool when no schema is set.
+ */
+export const pool = new Proxy({} as pg.Pool, {
+  get(_, prop) {
+    const entry = _getEntry(getActiveSchema());
+    const val = (entry.pool as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof val === "function" ? (val as Function).bind(entry.pool) : val;
+  },
+});
+
+/**
+ * Schema-aware drizzle proxy. Routes queries to the drizzle instance of
+ * whichever schema is active in the current AsyncLocalStorage context.
+ * Falls back to the main db when no schema is set.
+ */
+export const db = new Proxy({} as typeof _mainDb, {
+  get(_, prop) {
+    const entry = _getEntry(getActiveSchema());
+    const val = (entry.db as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof val === "function" ? (val as Function).bind(entry.db) : val;
+  },
+});

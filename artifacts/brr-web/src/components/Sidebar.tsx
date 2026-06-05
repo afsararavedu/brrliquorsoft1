@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
 const NAV_ITEMS = [
-  { label: "Home", href: "/", icon: LayoutDashboard, role: "admin" },
+  { label: "Home", href: "/home", icon: LayoutDashboard, role: "admin" },
   { label: "Sales", href: "/sales", icon: ShoppingCart },
   { label: "Inventory", href: "/inventory", icon: FileText },
   { label: "Stock", href: "/stock", icon: Package, role: "admin" },
@@ -67,7 +67,7 @@ export function Sidebar({ drawerOpen = false, onDrawerClose }: SidebarProps) {
 
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
         {filteredNavItems.map((item) => {
-          const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+          const isActive = location === item.href || (item.href !== "/home" && location.startsWith(item.href));
           return (
             <Link key={item.href} href={item.href}>
               <div

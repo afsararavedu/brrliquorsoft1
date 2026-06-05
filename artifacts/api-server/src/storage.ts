@@ -14,7 +14,7 @@ import {
   type DailyExpense, type InsertDailyExpense,
 } from "@workspace/db";
 import { eq, and, sql, desc, asc, inArray, lt } from "drizzle-orm";
-import { pool, db } from "./db";
+import { pool, db, mainPool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
@@ -131,7 +131,7 @@ export class DatabaseStorage implements IStorage {
     //     causes silent session-save failures → 401 on every request after
     //     a successful login.
     const store = new PostgresSessionStore({
-      pool,
+      pool: mainPool,
       createTableIfMissing: true,
     });
 

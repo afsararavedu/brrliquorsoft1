@@ -8,9 +8,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 function formatRemaining(totalSec: number): string {
   if (totalSec <= 0) return "0 seconds";
@@ -33,41 +32,36 @@ const loginSchema = z.object({
 export default function AuthPage() {
   const { user, loginMutation } = useAuth();
   const [, setLocation] = useLocation();
-  // Wall-clock time (ms) at which the lockout expires, or null if not locked.
+  const search = useSearch();
+  const shopName = new URLSearchParams(search).get("shop") ?? "";
+
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
-  // Re-render every second while the countdown is active.
   const [now, setNow] = useState<number>(() => Date.now());
-  // Generic non-lockout error message (e.g. "Invalid username or password")
-  // to render inline above the button. The destructive toast still fires
-  // for these via use-auth, but this gives an additional clear inline cue.
   const [inlineError, setInlineError] = useState<string | null>(null);
-  // How many login attempts the server says we have left before the
-  // lockout kicks in. Populated from the 401 response body and only
-  // used to render the "X attempts remaining" warning when the count
-  // gets uncomfortably low. Cleared on submit so the warning can't
-  // linger after a successful retry.
-  const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(
-    null,
-  );
+  const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { username: "", password: "" },
   });
 
+  // If no shop selected, send back to shop selector
+  useEffect(() => {
+    if (!shopName) {
+      setLocation("/");
+    }
+  }, [shopName]);
+
   useEffect(() => {
     if (user) {
       if (user.role === "admin") {
-        setLocation("/");
+        setLocation("/home");
       } else {
         setLocation("/sales");
       }
     }
   }, [user]);
 
-  // Drive the countdown timer once a lockout is active. The interval is
-  // only registered while we know we're locked, and it auto-clears when
-  // the deadline passes so the submit button re-enables itself.
   useEffect(() => {
     if (lockoutUntil === null) return;
     setNow(Date.now());
@@ -94,12 +88,9 @@ export default function AuthPage() {
     if (isLocked) return;
     setInlineError(null);
     setAttemptsRemaining(null);
-    loginMutation.mutate(data, {
+    loginMutation.mutate({ ...data, shop: shopName }, {
       onError: (error) => {
         if (error instanceof ApiError && error.status === 429) {
-          // Server tells us how many seconds to wait. Prefer the
-          // structured `retryAfterSec` field (sent in the JSON body),
-          // and fall back to a sensible default if it's missing.
           const body = (error.body ?? {}) as { retryAfterSec?: unknown };
           const sec =
             typeof body.retryAfterSec === "number" && body.retryAfterSec > 0
@@ -113,8 +104,6 @@ export default function AuthPage() {
               ? "Invalid username or password."
               : error.message,
           );
-          // 401 carries `attemptsRemaining` so we can warn the user
-          // before the next miss locks them out for 15 minutes.
           if (error instanceof ApiError && error.status === 401) {
             const body = (error.body ?? {}) as { attemptsRemaining?: unknown };
             if (typeof body.attemptsRemaining === "number") {
@@ -128,21 +117,16 @@ export default function AuthPage() {
 
   return (
     <div className="auth-root">
-      {/* Background image layer — separate element avoids iOS fixed issues */}
       <div
         className="auth-bg"
         style={{ backgroundImage: `url(${bgImage})` }}
         aria-hidden="true"
       />
-
-      {/* Overlay for readability */}
       <div className="auth-overlay" aria-hidden="true" />
 
-      {/* Login card */}
       <div className="auth-card-wrapper">
         <div className="auth-card">
           <div className="auth-card-inner">
-            {/* Logo */}
             <div className="flex justify-center mb-4">
               <img
                 src={brrLogo}
@@ -150,6 +134,12 @@ export default function AuthPage() {
                 className="w-20 h-20 object-contain rounded-full border-2 border-gray-100 shadow-md"
               />
             </div>
+
+            {shopName && (
+              <p className="text-center text-sm font-medium text-red-600 mb-1 tracking-wide uppercase">
+                Welcome to {shopName}
+              </p>
+            )}
 
             <h1 className="text-center text-2xl font-bold text-gray-800 mb-5 leading-tight">
               BRR Liquor Soft Login
@@ -202,9 +192,7 @@ export default function AuthPage() {
                     data-testid="login-lockout"
                     className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
                   >
-                    <div className="font-semibold">
-                      Too many failed attempts
-                    </div>
+                    <div className="font-semibold">Too many failed attempts</div>
                     <div>
                       For security, login is paused. Try again in{" "}
                       <span data-testid="login-lockout-remaining">
@@ -221,19 +209,18 @@ export default function AuthPage() {
                     className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
                   >
                     <div>{inlineError}</div>
-                    {attemptsRemaining !== null &&
-                      attemptsRemaining <= 2 && (
-                        <div
-                          className="mt-1 font-semibold"
-                          data-testid="login-attempts-warning"
-                        >
-                          {attemptsRemaining === 0
-                            ? "No attempts remaining — this account is now temporarily locked."
-                            : attemptsRemaining === 1
-                              ? "1 attempt remaining before this account is temporarily locked."
-                              : `${attemptsRemaining} attempts remaining before this account is temporarily locked.`}
-                        </div>
-                      )}
+                    {attemptsRemaining !== null && attemptsRemaining <= 2 && (
+                      <div
+                        className="mt-1 font-semibold"
+                        data-testid="login-attempts-warning"
+                      >
+                        {attemptsRemaining === 0
+                          ? "No attempts remaining — this account is now temporarily locked."
+                          : attemptsRemaining === 1
+                            ? "1 attempt remaining before this account is temporarily locked."
+                            : `${attemptsRemaining} attempts remaining before this account is temporarily locked.`}
+                      </div>
+                    )}
                   </div>
                 )}
                 <button
@@ -252,12 +239,17 @@ export default function AuthPage() {
               </form>
             </Form>
 
+            <button
+              onClick={() => setLocation("/")}
+              className="mt-4 w-full text-center text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
+            >
+              ← Change shop
+            </button>
           </div>
         </div>
       </div>
 
       <style>{`
-        /* Auth layout — cross-browser, all devices */
         .auth-root {
           position: relative;
           min-height: 100vh;
@@ -268,29 +260,21 @@ export default function AuthPage() {
           padding: 1rem;
           overflow: hidden;
         }
-
-        /* Background image using absolute positioning instead of
-           background-attachment:fixed which breaks on iOS Safari */
         .auth-bg {
           position: absolute;
           inset: 0;
           background-size: cover;
           background-position: center center;
           background-repeat: no-repeat;
-          /* Slight zoom so edges are never white on any ratio */
           transform: scale(1.04);
           transform-origin: center;
           will-change: transform;
         }
-
-        /* Subtle dark overlay so text on card reads clearly */
         .auth-overlay {
           position: absolute;
           inset: 0;
           background: rgba(0, 0, 0, 0.30);
         }
-
-        /* Centred card wrapper sits above bg + overlay */
         .auth-card-wrapper {
           position: relative;
           z-index: 10;
@@ -299,34 +283,24 @@ export default function AuthPage() {
           align-items: center;
           justify-content: center;
         }
-
         .auth-card {
           width: 100%;
-          max-width: 22rem;   /* 352 px — comfortable on all phones */
+          max-width: 22rem;
           background: rgba(255, 255, 255, 0.97);
           border-radius: 1.25rem;
           box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 4px 16px rgba(0,0,0,0.15);
           overflow: hidden;
-          /* Backdrop blur for browsers that support it */
           -webkit-backdrop-filter: blur(8px);
           backdrop-filter: blur(8px);
         }
-
         .auth-card-inner {
           padding: 2rem 2rem 1.75rem;
         }
-
-        /* Responsive adjustments */
         @media (max-width: 400px) {
-          .auth-card-inner {
-            padding: 1.5rem 1.25rem 1.5rem;
-          }
+          .auth-card-inner { padding: 1.5rem 1.25rem 1.5rem; }
         }
-
         @media (min-width: 640px) {
-          .auth-card {
-            max-width: 24rem;   /* 384 px — tablet / desktop */
-          }
+          .auth-card { max-width: 24rem; }
         }
       `}</style>
     </div>

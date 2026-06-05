@@ -64,6 +64,8 @@ lib/
 - The replit.md mentions `zod/v4` but the workspace actually uses `zod` v3 (`^3.25.76`)
 - The frontend's `@shared/*` alias resolves to `artifacts/brr-web/src/shared/` (local type copies, no backend imports)
 - Session store uses `connect-pg-simple` (PostgreSQL-backed sessions)
+- **Shop selection landing page**: The app starts at `/` with a full-screen shop selector (Balaji, Jyothi, Padma, Mallanna). Selecting a shop navigates to `/login?shop=<name>` which shows "Welcome to <Shop Name>" above the login form. After login, admins go to `/home`, employees to `/sales`. A "← Change shop" link returns to the landing page.
+- **Multi-tenant DB schema routing**: Each shop maps to its own PostgreSQL schema (`balaji_schema`, `jyothi_schema`, `padma_schema`, `mallanna_schema`). At login the chosen schema is bootstrapped (CREATE SCHEMA IF NOT EXISTS + migrations) if not yet initialised, then stored in `req.session.shopSchema`. A per-request middleware (`runInSchema`) sets an AsyncLocalStorage context, and the exported `db` and `pool` in `db.ts` are Proxies that transparently route all queries to the correct per-shop pool. The session store always uses `mainPool` (the default `DB_SCHEMA` pool) so sessions are stable across shop switches.
 - Password expiry: every user row carries `password_changed_at`. The api
   exposes a server-computed `passwordExpired` boolean on `/api/login` and
   `/api/user` responses (true when `password_changed_at` is older than 90

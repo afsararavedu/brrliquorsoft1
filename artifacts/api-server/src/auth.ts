@@ -13,6 +13,22 @@ import {
   recordSuccess,
   remainingAttempts,
 } from "./loginRateLimiter";
+import {
+  DB_SCHEMA,
+  SHOP_SCHEMA_MAP,
+  initSchemaIfNeeded,
+  runInSchema,
+  getActiveSchema,
+} from "./db";
+
+// Extend the express-session SessionData so TypeScript knows about our
+// extra fields (shopSchema, shopName) that we attach to the session at login.
+declare module "express-session" {
+  interface SessionData {
+    shopSchema?: string;
+    shopName?: string;
+  }
+}
 
 const DEV_SESSION_SECRET_FALLBACK = "salespro-dev-only-not-for-production";
 
@@ -27,46 +43,29 @@ declare global {
  * /api/register. Strips credential material (password hash)
  * that the browser never needs to see.
  */
-function safeUserResponse(user: SelectUser) {
+function safeUserResponse(user: SelectUser, shopName?: string | null) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...rest } = user;
-  return rest;
+  return { ...rest, shopName: shopName ?? null };
 }
 
 /**
  * Middleware that requires a valid authenticated session.
- * Returns 401 with `{ message: "Unauthorized" }` and does not invoke any
- * downstream handler when the request is not authenticated.
- * Apply this to any /api route that should only serve logged-in users.
  */
 export const requireAuth: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
-  // Diagnostic: log exactly why auth failed so EC2 journalctl shows the cause.
-  // hasCookie   → browser sent a cookie header (cookie WAS set by login)
-  // sessionID   → the session ID express-session read from the cookie
-  // hasPassport → session row exists in DB but passport user is missing
-  // If hasCookie=false, the login response never set Set-Cookie (session-store
-  // failed to save — look for "[session-store] ERROR" lines above in the log).
-  // If hasCookie=true but hasPassport=false, the session row is missing or empty.
   req.log?.warn({
     hasCookie:   !!(req.headers.cookie),
     sessionID:   req.sessionID ?? "(none)",
-    hasPassport: !!((req.session as Record<string, unknown>)?.passport),
+    hasPassport: !!((req.session as unknown as Record<string, unknown>)?.passport),
   }, "requireAuth: unauthenticated — check [session-store] ERROR lines if hasCookie=false");
   return res.status(401).json({ message: "Unauthorized" });
 };
 
 /**
  * Middleware that requires the authenticated user to have role === "admin".
- * Returns 401 if not authenticated, 403 if authenticated but not an admin.
- * Apply this to any /api route that performs destructive or admin-only writes
- * (deletes, bulk uploads, archive imports, admin exports, etc.).
- *
- * Should be chained AFTER `requireAuth` (or after the global `requireAuth`
- * mount on the `/api` router) so the 401 case is already handled, but it is
- * also safe to use stand-alone — it returns 401 when there is no user.
  */
 export const requireAdmin: RequestHandler = (req, res, next) => {
   if (!req.isAuthenticated() || !req.user) {
@@ -81,11 +80,6 @@ export const requireAdmin: RequestHandler = (req, res, next) => {
 export function setupAuth(app: Express) {
   const isProduction = app.get("env") === "production";
 
-  // SESSION_SECRET is required in production. The startup check in
-  // src/index.ts already enforces this and aborts the process if it's
-  // missing, so by the time we get here in production the env var must
-  // be set. The check below is a defensive last line of defence in case
-  // setupAuth is ever invoked from a different entry point.
   const envSecret = process.env.SESSION_SECRET;
   if (isProduction && !envSecret) {
     throw new Error(
@@ -102,19 +96,10 @@ export function setupAuth(app: Express) {
   }
   const secret = envSecret || DEV_SESSION_SECRET_FALLBACK;
 
-  // Trust the first proxy (nginx/Replit) so req.ip and req.secure are correct.
   if (isProduction) {
     app.set("trust proxy", 1);
   }
 
-  // Cookie security strategy:
-  //   COOKIE_SECURE=true  → always Secure (HTTPS-only, e.g. custom HTTPS EC2)
-  //   COOKIE_SECURE=false → never  Secure (plain HTTP EC2)
-  //   unset               → "auto" (Secure when request arrives over HTTPS,
-  //                          not Secure when HTTP — works for Replit + nginx)
-  //
-  // For plain-HTTP EC2 with nginx: set COOKIE_SECURE=false in /etc/brr/brr-api.env
-  // For Replit production (HTTPS proxy): leave unset — "auto" handles it.
   const rawCookieSecure = process.env.COOKIE_SECURE;
   const cookieSecure: boolean | "auto" =
     rawCookieSecure === "true"  ? true  :
@@ -127,7 +112,7 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
       secure: cookieSecure,
       sameSite: "lax",
@@ -143,6 +128,16 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // ── Per-request schema context middleware ──────────────────────────────
+  // Runs AFTER the session middleware so req.session is already populated.
+  // Sets the AsyncLocalStorage schema context so all downstream DB queries
+  // transparently use the shop's own PostgreSQL schema.
+  app.use((req, _res, next) => {
+    const schema = req.session?.shopSchema ?? DB_SCHEMA;
+    runInSchema(schema, () => next());
+  });
+  // ───────────────────────────────────────────────────────────────────────
+
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -150,7 +145,6 @@ export function setupAuth(app: Express) {
         if (!user) {
           return done(null, false, { message: "Invalid username or password" });
         }
-        
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
           return done(null, false, { message: "Invalid username or password" });
@@ -189,23 +183,18 @@ export function setupAuth(app: Express) {
         passwordChangedAt: new Date(),
       });
 
-      req.login(user, (err) => {
+      return req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json(safeUserResponse(user));
+        return res.status(201).json(safeUserResponse(user));
       });
     } catch (err) {
-      next(err);
+      return next(err);
     }
   });
 
-  // Brute-force protection: refuse to even check the password once an
-  // attacker has burned through too many failures for this username or
-  // this IP. Both the main password and the temp-password code paths
-  // route through the LocalStrategy below, so this single gate covers
-  // both — an attacker can't pivot to /api/login with the temp-password
-  // path to dodge the lockout.
-  app.post("/api/login", (req, res, next) => {
+  app.post("/api/login", async (req, res, next) => {
     const username = req.body?.username;
+    const shopParam = typeof req.body?.shop === "string" ? req.body.shop : "";
     const keys = loginKeysFor(req, username);
 
     const lockState = checkLocked(keys);
@@ -220,36 +209,60 @@ export function setupAuth(app: Express) {
         "Login rejected: too many failed attempts",
       );
       return res.status(429).json({
-        message:
-          "Too many failed login attempts. Please try again later.",
+        message: "Too many failed login attempts. Please try again later.",
         retryAfterSec: lockState.retryAfterSec,
       });
     }
 
-    return passport.authenticate(
-      "local",
-      (err: Error | null, user: SelectUser | false) => {
-        if (err) return next(err);
-        if (!user) {
-          recordFailure(keys);
-          // Tell the client how many more failed attempts are tolerated
-          // before the lockout kicks in, so the login UI can warn the
-          // user before they accidentally lock themselves out for 15
-          // minutes. Computed *after* recordFailure so the count
-          // reflects the attempt that just failed.
-          const attemptsRemaining = remainingAttempts(keys);
-          return res.status(401).json({
-            message: "Invalid username or password",
-            attemptsRemaining,
-          });
-        }
-        return req.login(user, (loginErr) => {
-          if (loginErr) return next(loginErr);
-          recordSuccess(keys);
-          return res.status(200).json(safeUserResponse(user));
-        });
-      },
-    )(req, res, next);
+    // Resolve the shop → schema. Fall back to the default DB_SCHEMA so
+    // deployments without a shop selection still work (e.g. single-tenant).
+    const shopSchema = SHOP_SCHEMA_MAP[shopParam] ?? DB_SCHEMA;
+    const shopName   = shopParam || null;
+
+    // Ensure the target schema exists and has all migrations applied.
+    // This is a no-op if the schema was already initialised.
+    try {
+      await initSchemaIfNeeded(shopSchema);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error({ shopSchema, err: msg }, "Failed to initialise shop schema");
+      return res.status(500).json({ message: "Failed to initialise shop schema" });
+    }
+
+    // Authenticate inside the target schema context so getUserByUsername
+    // and subsequent queries use the correct pool.
+    return new Promise<void>((resolve) => {
+      runInSchema(shopSchema, () => {
+        passport.authenticate(
+          "local",
+          (err: Error | null, user: SelectUser | false) => {
+            if (err) { next(err); return resolve(); }
+            if (!user) {
+              recordFailure(keys);
+              const remaining = remainingAttempts(keys);
+              res.status(401).json({
+                message: "Invalid username or password",
+                attemptsRemaining: remaining,
+              });
+              return resolve();
+            }
+            req.login(user, (loginErr) => {
+              if (loginErr) { next(loginErr); return resolve(); }
+              recordSuccess(keys);
+              // Persist the chosen shop in the session so every subsequent
+              // request is routed to the same schema automatically.
+              req.session.shopSchema = shopSchema;
+              req.session.shopName   = shopName ?? undefined;
+              req.session.save((saveErr) => {
+                if (saveErr) logger.warn({ saveErr }, "Session save error after login");
+                res.status(200).json(safeUserResponse(user, shopName));
+                resolve();
+              });
+            });
+          },
+        )(req, res, next);
+      });
+    });
   });
 
   app.post("/api/logout", (req, res, next) => {
@@ -265,9 +278,9 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(safeUserResponse(req.user as SelectUser));
+    return res.json(safeUserResponse(req.user as SelectUser, req.session.shopName));
   });
-  
+
   app.post("/api/reset-password", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const { password } = req.body;
@@ -276,6 +289,6 @@ export function setupAuth(app: Express) {
       password: hashedPassword,
       passwordChangedAt: new Date(),
     });
-    res.sendStatus(200);
+    return res.sendStatus(200);
   });
 }
