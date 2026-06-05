@@ -220,6 +220,25 @@ export async function initSchemaIfNeeded(schemaName: string): Promise<void> {
   return promise;
 }
 
+// ── Eager startup bootstrap for all shop schemas ──────────────────────────
+// On every startup / deploy, create all four shop schemas and apply migrations
+// so tables exist before any user logs in. Runs in parallel for speed.
+{
+  const shopSchemas = Object.values(SHOP_SCHEMA_MAP);
+  // eslint-disable-next-line no-console
+  console.info(`[db] Bootstrapping shop schemas: ${shopSchemas.join(", ")} …`);
+  await Promise.all(shopSchemas.map((s) => initSchemaIfNeeded(s)))
+    .then(() => {
+      // eslint-disable-next-line no-console
+      console.info("[db] All shop schemas are ready.");
+    })
+    .catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.error(`[db] Shop schema bootstrap error: ${msg}`);
+    });
+}
+
 // ── Helper ─────────────────────────────────────────────────────────────────
 function _getEntry(schema: string): DbEntry {
   return _schemaCache.get(schema) ?? { pool: _mainPool, db: _mainDb };
