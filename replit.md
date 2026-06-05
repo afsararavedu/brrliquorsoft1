@@ -8,7 +8,6 @@ pnpm workspace monorepo using TypeScript. Contains the BRR Liquor Soft web app (
 
 - **`artifacts/brr-web/`** — React + Vite frontend, preview path `/` (port 18172 in dev)
 - **`artifacts/api-server/`** — Express 5 backend API, preview path `/api`
-- **`artifacts/brr-mobile/`** — Expo (React Native) mobile companion app, preview path `/brr-mobile/` (port 26176 in dev). Talks to the same `/api/*` backend via cookie-based session (Set-Cookie captured natively + stored in AsyncStorage).
 - **`artifacts/mockup-sandbox/`** — Design/mockup canvas (pre-existing)
 
 ## Stack
@@ -87,8 +86,6 @@ the full runbook (EC2 + RDS Postgres + nginx + systemd). Supporting files:
 - `deploy/aws-ec2/brr-api.env.example` — env-var template (`DATABASE_URL`,
   `SESSION_SECRET`, optional `ADMIN_BOOTSTRAP_PASSWORD`).
 
-The mobile app does not deploy to AWS; just point its build-time
-`EXPO_PUBLIC_DOMAIN` at the AWS domain so it talks to the same `/api/*`.
 
 ## Required production secrets
 
