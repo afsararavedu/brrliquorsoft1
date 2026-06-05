@@ -26,25 +26,31 @@ export default function ShopSelectPage() {
   if (isLoading || user) return null;
 
   return (
-    <div className="relative min-h-screen min-h-dvh flex flex-col overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center scale-[1.03] origin-center"
-        style={{ backgroundImage: `url(${bgImage})` }}
-        aria-hidden="true"
-      />
+    <div
+      className="fixed inset-0 flex flex-col overflow-hidden"
+      style={{
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
 
-      <div className="relative z-10 flex flex-col flex-1 items-center justify-start px-4 pt-8 pb-10">
-        <div className="w-full max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl px-8 py-9 flex flex-col items-center gap-6">
+      <div className="relative z-10 flex flex-col items-center w-full h-full overflow-y-auto px-4 py-6 sm:py-8">
+        <div className="w-full max-w-xs sm:max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl px-6 sm:px-8 py-7 sm:py-9 flex flex-col items-center gap-5 sm:gap-6">
           <img
             src={brrLogo}
             alt="BRR IT Solutions"
-            className="w-20 h-20 object-contain rounded-full border-2 border-gray-100 shadow-md"
+            className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-full border-2 border-gray-100 shadow-md flex-shrink-0"
           />
 
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-800 leading-tight">BRR Liquor Soft</h1>
-            <p className="text-sm text-gray-500 mt-1">Select your shop to continue</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 leading-tight">
+              BRR Liquor Soft
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Select your shop to continue
+            </p>
           </div>
 
           <div className="w-full flex flex-col gap-3">
