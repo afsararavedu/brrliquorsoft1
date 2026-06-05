@@ -34,7 +34,7 @@ export default function ShopSelectPage() {
       />
       <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
 
-      <div className="relative z-10 flex flex-col flex-1 items-center justify-center px-4 py-10">
+      <div className="relative z-10 flex flex-col flex-1 items-center justify-start px-4 pt-8 pb-10">
         <div className="w-full max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl px-8 py-9 flex flex-col items-center gap-6">
           <img
             src={brrLogo}
