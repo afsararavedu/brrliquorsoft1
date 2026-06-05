@@ -1202,92 +1202,22 @@ export default function Sales() {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap justify-end">
-            {!speech.supported ? (
-              <div className="relative group">
-                <button
-                  disabled
-                  data-testid="button-voice-input-unsupported"
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium shadow-sm bg-violet-600/40 text-white/60 cursor-not-allowed"
-                >
-                  <Mic className="w-4 h-4" />
-                  Voice
-                </button>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 pointer-events-none">
-                  <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
-                    Voice input requires Chrome, Edge, or Safari
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
-                  </div>
+            <div className="relative group">
+              <button
+                disabled
+                data-testid="button-voice-input-unsupported"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium shadow-sm bg-violet-600/40 text-white/60 cursor-not-allowed"
+              >
+                <Mic className="w-4 h-4" />
+                Voice
+              </button>
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 pointer-events-none">
+                <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
+                  Voice input is temporarily disabled
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
                 </div>
               </div>
-            ) : (
-              <div className="relative flex items-center gap-2">
-                <button
-                  onClick={speech.toggle}
-                  disabled={isSubmitted && !isAdmin}
-                  data-testid="button-voice-input"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    speech.isListening
-                      ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                      : "bg-violet-600 text-white hover:bg-violet-700"
-                  }`}
-                >
-                  {speech.isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  {speech.isListening ? "Stop" : "Voice"}
-                </button>
-                {speech.isListening && (
-                  <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-card border border-border rounded-xl shadow-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-xs font-semibold text-red-600">Listening...</span>
-                    </div>
-                    {speech.transcript && (
-                      <p className="text-sm text-muted-foreground italic truncate">"{speech.transcript}"</p>
-                    )}
-                    {speech.lastAction && (
-                      <p className="text-xs text-primary font-medium mt-1">{speech.lastAction}</p>
-                    )}
-                  </div>
-                )}
-                {!speech.isListening && speech.lastAction && (
-                  <span className="text-xs text-muted-foreground max-w-[160px] truncate" title={speech.lastAction}>
-                    {speech.lastAction}
-                  </span>
-                )}
-                {speech.error && (
-                  <div className="absolute top-full left-0 mt-2 z-50 w-80 bg-white border border-red-200 rounded-xl shadow-lg p-3">
-                    {speech.error === "MICROPHONE_DENIED" ? (
-                      <>
-                        <p className="text-sm font-semibold text-red-600 mb-1">Microphone access denied</p>
-                        <p className="text-xs text-gray-600">
-                          Your browser blocked microphone access. To fix this:
-                        </p>
-                        <ol className="text-xs text-gray-600 mt-1 list-decimal list-inside space-y-0.5">
-                          <li>Click the <strong>lock / info icon</strong> in the address bar</li>
-                          <li>Set <strong>Microphone</strong> to <em>Allow</em></li>
-                          <li>Reload the page, then try again</li>
-                        </ol>
-                      </>
-                    ) : speech.error === "MICROPHONE_INSECURE" ? (
-                      <>
-                        <p className="text-sm font-semibold text-red-600 mb-1">HTTPS required for voice</p>
-                        <p className="text-xs text-gray-600">
-                          Browsers only allow microphone access on secure (HTTPS) connections.
-                          Voice input is not available over plain HTTP.
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-xs text-red-500">{speech.error}</p>
-                    )}
-                    <button
-                      onClick={speech.clearError}
-                      className="mt-2 text-xs text-red-400 hover:text-red-600 underline"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+            </div>
             {/* Import split-button */}
             <div className="flex items-stretch">
               <button
