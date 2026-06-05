@@ -14,24 +14,35 @@ import {
   type DailyExpense, type InsertDailyExpense,
 } from "@workspace/db";
 import { eq, and, sql, desc, asc, inArray, lt } from "drizzle-orm";
-import { pool, db, mainPool } from "./db";
+import { pool, db, mainPool, getActiveSchema } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
 // ── Simple in-memory TTL cache ─────────────────────────────────────────────
 // Prevents repetitive full-table scans for read-heavy, rarely-mutated data
 // (orders, stock_details, sales_mrp_details) on every Sales page load.
+//
+// IMPORTANT: all keys are prefixed with the active schema so that data cached
+// for one shop (e.g. balaji_schema) is never returned to a request running in
+// a different shop's context (e.g. jyothi_schema).
 const _cache = new Map<string, { data: unknown; expiry: number }>();
+
+/** Scope a bare cache key to the currently-active shop schema. */
+function _scopedKey(key: string): string {
+  return `${getActiveSchema()}:${key}`;
+}
+
 function _getCache<T>(key: string): T | null {
-  const entry = _cache.get(key);
-  if (!entry || Date.now() > entry.expiry) { _cache.delete(key); return null; }
+  const scoped = _scopedKey(key);
+  const entry = _cache.get(scoped);
+  if (!entry || Date.now() > entry.expiry) { _cache.delete(scoped); return null; }
   return entry.data as T;
 }
 function _setCache<T>(key: string, data: T, ttlMs: number): T {
-  _cache.set(key, { data, expiry: Date.now() + ttlMs });
+  _cache.set(_scopedKey(key), { data, expiry: Date.now() + ttlMs });
   return data;
 }
-function _invalidate(...keys: string[]) { keys.forEach(k => _cache.delete(k)); }
+function _invalidate(...keys: string[]) { keys.forEach(k => _cache.delete(_scopedKey(k))); }
 // ──────────────────────────────────────────────────────────────────────────
 
 // Sort brand_number numerically by its leading digits; brand_numbers that do

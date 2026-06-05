@@ -268,7 +268,20 @@ export async function initSchemaIfNeeded(schemaName: string): Promise<void> {
 
 // ── Helper ─────────────────────────────────────────────────────────────────
 function _getEntry(schema: string): DbEntry {
-  return _schemaCache.get(schema) ?? { pool: _mainPool, db: _mainDb };
+  const entry = _schemaCache.get(schema);
+  if (!entry) {
+    // This should never happen in normal operation — all shop schemas are
+    // eagerly bootstrapped at startup. Reaching here means a schema init
+    // failed silently. Log a clear warning so it shows up in journalctl.
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[db] WARNING: schema "${schema}" not found in cache — falling back to ` +
+      `main pool (${DB_SCHEMA}). Check startup logs for schema init errors. ` +
+      `Data returned may belong to the wrong shop.`
+    );
+    return { pool: _mainPool, db: _mainDb };
+  }
+  return entry;
 }
 
 // ── Exports ────────────────────────────────────────────────────────────────
