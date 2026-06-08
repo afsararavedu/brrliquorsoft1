@@ -1,5 +1,5 @@
 import brrLogo from "@assets/brr_solution_logo_1776622112650.jpeg";
-import bgImage from "@assets/brr_liquor_soft_wallpaper_1780665421785.jpg";
+import bgImage from "@assets/brr_liquor_soft_home_page_1780915954544.jpg";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
