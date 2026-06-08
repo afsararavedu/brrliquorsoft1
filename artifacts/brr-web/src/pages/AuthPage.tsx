@@ -136,12 +136,12 @@ export default function AuthPage() {
             </div>
 
             {shopName && (
-              <p className="text-center text-sm font-medium text-red-600 mb-1 tracking-wide uppercase">
-                Welcome to {shopName}
+              <p className="text-center text-2xl font-bold text-blue-700 mb-1 tracking-wide">
+                WELCOME TO {shopName}
               </p>
             )}
 
-            <h1 className="text-center text-2xl font-bold text-gray-800 mb-5 leading-tight">
+            <h1 className="text-center text-2xl font-bold text-red-700 mb-5 leading-tight">
               BRR Liquor Soft Login
             </h1>
 
